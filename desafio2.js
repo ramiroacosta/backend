@@ -1,5 +1,5 @@
 const fs = require('fs');
-const ruta = "./desafio2Archivo.txt";
+const ruta = "./desafio2Archivo.json";
 const crearArchivo = async (ruta) => {
     if (!fs.existsSync(ruta)){
         await fs.promises.writeFile(ruta, "[]")
@@ -17,8 +17,6 @@ class product {
         this.stock = stock;
     }
 }
-
-
 class ProductManager {
     constructor() {
         this.path = ruta;
@@ -48,7 +46,7 @@ class ProductManager {
 
             }
         } else {
-            console.error("Debe tener todos los campos completos para agregarlo")
+            console.error("Debe tener todos los campos completos")
         }
     }
 
@@ -57,6 +55,7 @@ class ProductManager {
         let aux = JSON.parse(contenido)
         return aux;   
     }
+    // actualizo productos
     updateProduct = async({id, title, description, price, thumbnail, code, stock})  => {
         let contenido = await fs.promises.readFile(this.path, 'utf-8')  
         let aux = JSON.parse(contenido)
@@ -99,9 +98,9 @@ class ProductManager {
                 }
             }
             await fs.promises.writeFile(this.path, JSON.stringify(aux))
-            console.log("Producto actualizado exitosamente");
+            console.log("Producto actualizado");
         } else {
-            console.log( "Producto no encontrado para actualizar")
+            console.log( "Producto no encontrado")
         }
     
     }
@@ -113,10 +112,10 @@ class ProductManager {
             let pos = aux.findIndex(product => product.id === id)
             return aux[pos];
         }else{
-            return "No se encontró el producto que desea ver"
+            return "No se encontró el producto"
         }        
     }
-
+    // borro productos
     deleteProductById= async(id)=> {
         let contenido = await fs.promises.readFile(this.path, 'utf-8')
         let aux = JSON.parse(contenido)
@@ -124,15 +123,15 @@ class ProductManager {
         {
             const arraySinElIdSeleccionado = aux.filter(product => product.id != id);
             await fs.promises.writeFile(this.path, JSON.stringify(arraySinElIdSeleccionado))
-            console.log("Producto eliminado exitosamente");           
+            console.log("Producto eliminado");           
         }else{
-            console.error("No se encontró el producto que desea eliminar")
+            console.error("No se encontró el producto")
         }        
     }
 
 
 }
-
+// agrego los productos
 const producto1=new product("Iphone 14","celular nuevo",1500,"sin imagen","#ghy123",30);
 const producto2=new product("Iphone 13","celular nuevo",1400,"sin imagen","#ghy128",25);
 const producto3=new product("Iphone 12","celular nuevo",1300,"sin imagen","#ghy126",17);
@@ -143,17 +142,25 @@ const productoPrueba = new product("producto prueba", "Este es un producto prueb
 
 //Creo un product manager
 productManager = new ProductManager()
-
-const tests = async () => {
+// pruebas
+const prueba = async () => {
     
-    await crearArchivo(ruta); 
-    console.log(await productManager.getAllProducts());
-    await productManager.addProduct(productoPrueba);
-    console.log(await productManager.getAllProducts()); 
-    console.log(await productManager.getProductById(1)); 
-    await productManager.updateProduct({id: 1, title:"Prueba cambiando titulo y descripcion del elemento 1", description:"Exito"}) 
-    console.log(await productManager.getProductById(1));
-    await productManager.deleteProductById(1); 
-    
+    await crearArchivo(ruta)
+    console.log(await productManager.getAllProducts())
+    await productManager.addProduct(productoPrueba)
+    console.log(await productManager.getAllProducts())
+    console.log(await productManager.getProductById(1))
+    await productManager.updateProduct({id: 1, title:"Prueba ", description:"Exito"}) 
+    console.log(await productManager.getProductById(1))
+    await productManager.deleteProductById(1)
+    console.log(await productManager.getAllProducts())
+    await productManager.addProduct(producto1)
+    await productManager.addProduct(producto2)
+    await productManager.addProduct(producto3)
+    await productManager.addProduct(producto4)
+    await productManager.addProduct(producto5)
+    await productManager.deleteProductById(4)
+    await productManager.updateProduct({id: 7, title: "Nuevo iphone", description:"anteriormente era el 4", price:"1900", thumbnail:"sin foto",code:"#545dsaf",stock:"4"})
+    console.log(await productManager.getAllProducts())
 }
-tests()
+prueba()
