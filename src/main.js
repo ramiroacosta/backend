@@ -1,5 +1,5 @@
 const fs = require('fs');
-const ruta = "./desafio2Archivo.json";
+const ruta = "./main.json";
 const crearArchivo = async (ruta) => {
     if (!fs.existsSync(ruta)){
         await fs.promises.writeFile(ruta, "[]")
