@@ -1,28 +1,47 @@
-const fs = require('fs');
-const ruta = "./main.json";
-const crearArchivo = async (ruta) => {
-    if (!fs.existsSync(ruta)){
-        await fs.promises.writeFile(ruta, "[]")
-    }else if ((await fs.promises.readFile(ruta,"utf-8")).length==0){
-        await fs.promises.writeFile(ruta, "[]")
-    }
-}
-class product {
-    constructor(title, description, price, thumbnail, code, stock) {
+import fs from "fs";
+
+
+
+class Producto {
+    constructor(title, description, price, thumbnail, code, stock,status,category) {
         this.title = title;
         this.description = description;
         this.price = price;
         this.thumbnail = thumbnail;
         this.code = code;
         this.stock = stock;
+        this.status = status;
+        this.category = category;
     }
 }
-class ProductManager {
-    constructor() {
-        this.path = ruta;
+
+
+
+const producto1 = new Producto("Iphone 14", 2000, [] , "aaaa", 23,true,"");
+const producto2 = new Producto("Iphone 13", 1500, [] , "aaab", 256,true,"");
+const producto3 = new Producto("Iphone 12", 1000, [] , "aaac", 56,true,"");
+const producto4 = new Producto("Iphone 11", 900, [] , "aaad", 32,true,"");
+const producto5 = new Producto("Iphone 10", 800, [] , "aaae", 22,true,"");
+
+const producto6 = new Producto("Iphone 14 pro max", 2000, [] , "aaaf", 253,true,"");
+const producto7 = new Producto("Iphone 13 pro max", 1500, [] , "aaag", 56,true,"");
+const producto8 = new Producto("Iphone 12 pro max", 1000, [] , "aaah", 526,true,"");
+const producto9 = new Producto("Iphone 11 pro max", 900, [] , "aaai", 32,true,"");
+const producto10 = new Producto("Iphone 10 pro max", 800, [] , "aaaj", 22,true,"");
+
+export class ProductManager {
+    constructor(path) {
+        this.path = path;
     }
-    addProduct = async (newProduct) => {
-        if (toString(newProduct.id).length > 0 && newProduct.title.length > 0 && newProduct.description.length > 0 && toString(newProduct.price).length > 0 && newProduct.thumbnail.length > 0 && newProduct.code.length > 0 && toString(newProduct.stock).length > 0) {
+
+    checkArchivo = ()=>{
+        return fs.existsSync(this.path)       
+    }
+    crearArchivo = async () => {
+        await fs.promises.writeFile(this.path, "[]")
+    }
+    addProduct = async (newProduct,pathImg) => {
+        if (newProduct.status===true && newProduct.category.length>0 &&toString(newProduct.id).length > 0 && newProduct.title.length > 0 && newProduct.description.length > 0 && toString(newProduct.price).length > 0  && newProduct.code.length > 0 && toString(newProduct.stock).length > 0) {
             let contenido = await fs.promises.readFile(this.path, "utf-8");
             let arrayProductos = JSON.parse(contenido);
             if (arrayProductos.filter(product => product.code == newProduct.code).length > 0) {
@@ -35,18 +54,20 @@ class ProductManager {
                 console.log()
                 if (aux.length>0){
                     const idAutoincremental = aux[aux.length-1].id+1; 
+                    newProduct.thumbnail=pathImg;
                     aux.push({ id: idAutoincremental, ...newProduct });
                     await fs.promises.writeFile(this.path, JSON.stringify(aux));
                 }
                 else{
                     const idAutoincremental = 1;
+                    newProduct.thumbnail=pathImg;
                     aux.push({ id: idAutoincremental, ...newProduct });
                     await fs.promises.writeFile(this.path, JSON.stringify(aux));
                 }
 
             }
         } else {
-            console.error("Debe tener todos los campos completos")
+            console.error("Debe tener todos los campos completos para agregarlo")
         }
     }
 
@@ -55,8 +76,7 @@ class ProductManager {
         let aux = JSON.parse(contenido)
         return aux;   
     }
-    // actualizo productos
-    updateProduct = async({id, title, description, price, thumbnail, code, stock})  => {
+    updateProduct = async({id, title, description, price, thumbnail, code, stock, status, category})  => {
         let contenido = await fs.promises.readFile(this.path, 'utf-8')  
         let aux = JSON.parse(contenido)
         if(aux.some(product=> product.id === id)) {
@@ -85,7 +105,9 @@ class ProductManager {
                     aux[pos].thumbnail = thumbnail;
                 }
             }
-            if (code!=undefined){
+            if (aux.some(prod => prod.code==code)){
+                console.error("No puede poner un codigo que ya existe")
+            }else if(code!=undefined){
                 if (code.length>0)
                 {
                     aux[pos].code = code;
@@ -96,11 +118,26 @@ class ProductManager {
                 {
                     aux[pos].stock = parseInt(stock);
                 }
+            }        
+            if (status!=undefined){
+                if (status==false)
+                {
+                    aux[pos].status = false;
+                }else{
+                    aux[pos].status = true;
+                }
             }
+            if (category!=undefined){
+                if (category.length>0)
+                {
+                    aux[pos].category = category;
+                }
+            }
+            
             await fs.promises.writeFile(this.path, JSON.stringify(aux))
-            console.log("Producto actualizado");
+            console.log("Producto actualizado exitosamente");
         } else {
-            console.log( "Producto no encontrado")
+            console.log( "Producto no encontrado para actualizar")
         }
     
     }
@@ -112,10 +149,10 @@ class ProductManager {
             let pos = aux.findIndex(product => product.id === id)
             return aux[pos];
         }else{
-            return "No se encontró el producto"
+            return null
         }        
     }
-    // borro productos
+
     deleteProductById= async(id)=> {
         let contenido = await fs.promises.readFile(this.path, 'utf-8')
         let aux = JSON.parse(contenido)
@@ -123,44 +160,14 @@ class ProductManager {
         {
             const arraySinElIdSeleccionado = aux.filter(product => product.id != id);
             await fs.promises.writeFile(this.path, JSON.stringify(arraySinElIdSeleccionado))
-            console.log("Producto eliminado");           
+            console.log("Producto eliminado exitosamente");           
         }else{
-            console.error("No se encontró el producto")
+            console.error("No se encontró el producto que desea eliminar")
         }        
     }
 
-
 }
-// agrego los productos
-const producto1=new product("Iphone 14","celular nuevo",1500,"sin imagen","#ghy123",30);
-const producto2=new product("Iphone 13","celular nuevo",1400,"sin imagen","#ghy128",25);
-const producto3=new product("Iphone 12","celular nuevo",1300,"sin imagen","#ghy126",17);
-const producto4=new product("Iphone 11 pro","celular nuevo",1200,"sin imagen","#ghy124",14);
-const producto5=new product("Iphone 11","celular nuevo",1000,"sin imagen","#ghy127",10);
-const productoPrueba = new product("producto prueba", "Este es un producto prueba", 200, "sin Imagen", "#ghy129", 25);
 
 
-//Creo un product manager
-productManager = new ProductManager()
-// pruebas
-const prueba = async () => {
-    
-    await crearArchivo(ruta)
-    console.log(await productManager.getAllProducts())
-    await productManager.addProduct(productoPrueba)
-    console.log(await productManager.getAllProducts())
-    console.log(await productManager.getProductById(1))
-    await productManager.updateProduct({id: 1, title:"Prueba ", description:"Exito"}) 
-    console.log(await productManager.getProductById(1))
-    await productManager.deleteProductById(1)
-    console.log(await productManager.getAllProducts())
-    await productManager.addProduct(producto1)
-    await productManager.addProduct(producto2)
-    await productManager.addProduct(producto3)
-    await productManager.addProduct(producto4)
-    await productManager.addProduct(producto5)
-    await productManager.deleteProductById(4)
-    await productManager.updateProduct({id: 7, title: "Nuevo iphone", description:"anteriormente era el 4", price:"1900", thumbnail:"sin foto",code:"#545dsaf",stock:"4"})
-    console.log(await productManager.getAllProducts())
-}
-prueba()
+
+
